@@ -1,0 +1,27 @@
+{
+  "name": "all-that-news",
+  "version": "1.0.0",
+  "description": "A news site blog using scraping and Mongo.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nathan25maloney/All-That-News.git"
+  },
+  "author": "Nathan Maloney",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nathan25maloney/All-That-News/issues"
+  },
+  "homepage": "https://github.com/nathan25maloney/All-That-News#readme",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "cheerio": "^1.0.0-rc.2",
+    "express": "^4.15.4",
+    "express-handlebars": "^3.0.0",
+    "mongoose": "^4.11.7",
+    "request": "^2.81.0"
+  }
+}
