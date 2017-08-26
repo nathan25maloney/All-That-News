@@ -124,7 +124,7 @@ $(document).on("click", "#deletenote", function() {
   
 });
 
-$(document).on("click", "#savenote", function() {
+$(document).on("click", "#scrape", function() {
   $.ajax({
     method: "GET",
     url: "/scrape"
