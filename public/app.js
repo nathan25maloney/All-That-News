@@ -126,10 +126,12 @@ $(document).on("click", "#deletenote", function() {
 
 $(document).on("click", "#scrape", function() {
   $.ajax({
-    method: "GET",
+    method: "POST",
     url: "/scrape"
   }).done(function(data) {
     console.log(data);
+    document.location.reload();
+    restartall();
   })
 })
 

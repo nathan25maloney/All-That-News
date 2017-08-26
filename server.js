@@ -26,6 +26,8 @@ app.use(bodyParser.urlencoded({
 app.use(express.static("public"));
 
 // Database configuration with mongoose
+// mongodb://heroku_80wf5kx7:acjp6pi0ohpajae9spder1hgjp@ds157723.mlab.com:57723/heroku_80wf5kx7
+// mongodb://localhost/week18day3mongoose
 mongoose.connect("mongodb://heroku_80wf5kx7:acjp6pi0ohpajae9spder1hgjp@ds157723.mlab.com:57723/heroku_80wf5kx7",{
   useMongoClient: true
 });
@@ -45,7 +47,7 @@ db.once("open", function() {
 // Routes
 // ======
 
-app.get("/scrape", function(req, res) {
+app.post("/scrape", function(req, res) {
   // Query: In our database, go to the animals collection, then "find" everything,
   // but this time, sort it by name (1 means ascending order)
   request("http://www.sciencemag.org/news/latest-news", function(error, response, html) {
