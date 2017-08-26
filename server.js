@@ -2,6 +2,7 @@ var express = require("express");
 var bodyParser = require("body-parser");
 var logger = require("morgan");
 var mongoose = require("mongoose");
+var mongojs = require("mongojs");
 // Requiring our Note and Article models
 var Note = require("./models/Note.js");
 var Article = require("./models/Article.js");
@@ -44,43 +45,74 @@ db.once("open", function() {
 // Routes
 // ======
 
-// A GET request to scrape the echojs website
 app.get("/scrape", function(req, res) {
-  // First, we grab the body of the html with request
-  request("http://www.echojs.com/", function(error, response, html) {
-    // Then, we load that into cheerio and save it to $ for a shorthand selector
-    var $ = cheerio.load(html);
-    // Now, we grab every h2 within an article tag, and do the following:
-    $("article h2").each(function(i, element) {
+  // Query: In our database, go to the animals collection, then "find" everything,
+  // but this time, sort it by name (1 means ascending order)
+  request("http://www.sciencemag.org/news/latest-news", function(error, response, html) {
 
-      // Save an empty result object
-      var result = {};
+  // Load the HTML into cheerio and save it to a variable
+  // '$' becomes a shorthand for cheerio's selector commands, much like jQuery's '$'
+  var $ = cheerio.load(html);
 
-      // Add the text and href of every link, and save them as properties of the result object
-      result.title = $(this).children("a").text();
-      result.link = $(this).children("a").attr("href");
+  Article.find({}, function(error, doc) {
+    // Send any errors to the browser
+    if (error) {
+      res.send(error);
+    }
+    // Or send the doc to the browser
+    else {
 
-      // Using our Article model, create a new entry
-      // This effectively passes the result object to the entry (and the title and link)
-      var entry = new Article(result); 
+      $("article.media.media--var").each(function(i, element) {
 
-      // Now, save that entry to the db
-      entry.save(function(err, doc) {
-        // Log any errors
-        if (err) {
-          console.log(err);
-        }
-        // Or log the doc
-        else {
-          console.log(doc);
-        }
+          var result = {};
+
+          // Add the text and href of every link, and save them as properties of the result object
+          result.title = $(this).children('.media__body').children("h2").children("a").text();
+          result.link = $(this).children('.media__body').children("h2").children("a").attr("href");
+          result.img= $(this).children('.media__icon').children("a").children("img").attr("src");
+          console.log(result)
+
+          var isAlreadyScraped = false;
+          for (var i = 0; i < doc.length; i++) {
+            if(doc[i].title === result.title){
+              isAlreadyScraped = true;
+            }
+          }
+
+          // Using our Article model, create a new entry
+          // This effectively passes the result object to the entry (and the title and link)
+          if (!isAlreadyScraped) {
+            var entry = new Article(result); 
+            console.log(result);
+            // Now, save that entry to the db
+            entry.save(function(err, doc) {
+              // Log any errors
+              if (err) {
+                // console.log(err);
+              }
+              // Or log the doc
+              else {
+                console.log(doc);
+              }
+            });
+          }
+          
+        
       });
+      res.redirect("/")
 
-    });
+
+      
+    }
   });
-  // Tell the browser that we finished scraping the text
-  res.send("Scrape Complete");
+  
+  
+  
+  
 });
+
+});
+
 
 // This will get the articles we scraped from the mongoDB
 app.get("/articles", function(req, res) {
@@ -102,20 +134,26 @@ app.get("/articles", function(req, res) {
 
 // This will grab an article by it's ObjectId
 app.get("/articles/:id", function(req, res) {
+  
 
-
-  // TODO
-  // ====
-  Article.find({"_id":  req.params.id }, function(error, doc) {
-    // Send any errors to the browser
-    if (error) {
-      res.send(error);
-    }
-    // Or send the doc to the browser
-    else {
-      res.send(doc);
-    }
-  });
+  Article.findOne({"_id":  req.params.id })
+    
+    .populate({
+        path:'notes',
+        model:'Note'
+    })
+    // Now, execute that query
+    .exec(function(error, doc) {
+      // Send any errors to the browser
+      if (error) {
+        res.send(error);
+      }
+      // Or, send our results to the browser, which will now include the books stored in the library
+      else {
+        res.send(doc);
+        console.log(doc);
+      }
+    });
   // Finish the route so it finds one article using the req.params.id,
 
   // and run the populate method with "note",
@@ -129,8 +167,7 @@ app.get("/articles/:id", function(req, res) {
 app.post("/articles/:id", function(req, res) {
 
 
-  // TODO
-  // ====
+ 
 
   // save the new note that gets posted to the Notes collection
   var newNote = new Note(req.body);
@@ -143,6 +180,7 @@ app.post("/articles/:id", function(req, res) {
     // Otherwise
     else {
       // Find our user and push the new note id into the User's notes array
+      console.log("req.params.id "+req.params.id)
       Article.findOneAndUpdate({"_id":  mongojs.ObjectId(req.params.id) },{ $push: { "notes": doc._id } }, { new: true }, function(err, newdoc) {
         // Send any errors to the browser
         if (err) {
@@ -150,6 +188,7 @@ app.post("/articles/:id", function(req, res) {
         }
         // Or send the newdoc to the browser
         else {
+          console.log(newdoc)
           res.send(newdoc);
         }
       });
@@ -160,6 +199,21 @@ app.post("/articles/:id", function(req, res) {
 
 
 });
+
+app.post("/notes/:id", function(req, res){
+
+
+  Note.findByIdAndRemove(req.params.id, function(err, note) {
+     if (err) {
+          res.send(err);
+        }
+        // Or send the newdoc to the browser
+        else {
+          console.log(note);
+          res.send(note);
+        }
+  })
+})
 
 
 // Listen on port 3000
