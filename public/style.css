@@ -36,3 +36,30 @@ li{
 img {
     max-width: 200px;
 }
+
+body {
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #333;
+    background-color: cadetblue;
+}
+
+.container {
+    
+    background-color: lightgrey;
+}
+
+@media screen and (min-width: 768px){
+.container .jumbotron, .container-fluid .jumbotron {
+    padding-right: 60px;
+    padding-left: 79px;
+    background-color: silver;
+    margin-right: -15px;
+    margin-left: -15px;
+}
+}
+
+.container .jumbotron, .container-fluid .jumbotron {
+background-color: silver;
+}
